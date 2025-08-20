@@ -1,10 +1,11 @@
 import { Difficulty } from './types';
 
 export const POKEMON_LIST = [
-  'Kyogre', 'Arceus', 'Lugia', 'Tapu Coco', 'Tapu Fini',
-  'Tapu Lele', 'Tapu Bulu', 'Groudon', 'Lunala', 'Solgaleo', 'Rayquaza', 'Mew',
-  'aerodactyl', 'alolandugtrio', 'alolanexeggutor', 'articuno', 'guzzlord', 
-  'gyrados', 'hooh', 'hoopa', 'ludicolo', 'magikarp', 'moltres', 'slowking', 'suicune', 'zapdos'
+  'kyogre', 'arceus', 'lugia', 'tapu coco', 'tapu fini',
+  'tapu lele', 'tapu bulu', 'groudon', 'lunala', 'solgaleo', 'rayquaza', 'mew', 
+  'aerodactyl', 'alolandugtrio', 'alolanexeggutor', 'articuno', 'guzzlord', 'gyrados', 
+  'hooh', 'hoopa', 'ludicolo', 'magikarp', 'moltres', 'slowking', 'suicune', 'zapdos', 
+  'bulbasaur', 'megagyarados', 'primalgroudon', 'primalkyogre'
 ];
 
 // Using a local path for the Pokéball image for offline use.

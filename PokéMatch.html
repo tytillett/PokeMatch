@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pokémon Memory Match</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* For 3D card flip effect */
+      .transform-style-preserve-3d {
+        transform-style: preserve-3d;
+      }
+      .perspective-1000 {
+        perspective: 1000px;
+      }
+      .rotate-y-180 {
+        transform: rotateY(180deg);
+      }
+      .backface-hidden {
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.1",
+    "react-dom/client": "https://esm.sh/react-dom@^19.1.1/client",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "react/": "https://esm.sh/react@^19.1.1/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-slate-900">
+    <div id="root"></div>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel" data-type="module">
+      // React imports from importmap.
+      import React, { useState, useEffect, useCallback } from 'react';
+      import ReactDOM from 'react-dom/client';
+
+      // --- Start of inlined application code ---
+
+      // From types.ts
+      const Difficulty = Object.freeze({
+        Normal: 'Normal',
+        Great: 'Great',
+        Ultra: 'Ultra',
+        Master: 'Master',
+      });
+
+      const GameState = Object.freeze({
+        Initial: 'Initial',
+        Playing: 'Playing',
+        Won: 'Won',
+      });
+
+      // From constants.ts
+      const POKEMON_LIST = [
+        'Kyogre', 'Arceus', 'Lugia', 'Tapu Coco', 'Tapu Fini',
+        'Tapu Lele', 'Tapu Bulu', 'Groudon', 'Lunala', 'Solgaleo', 'Rayquaza', 'Mew',
+        'aerodactyl', 'alolandugtrio', 'alolanexeggutor', 'articuno', 'guzzlord', 
+        'gyrados', 'hooh', 'hoopa', 'ludicolo', 'magikarp', 'moltres', 'slowking', 'suicune', 'zapdos'
+      ];
+      const POKEBALL_URL = './images/pokeball.png';
+      const GREATBALL_URL = './images/greatball.png';
+      const ULTRABALL_URL = './images/ultraball.png';
+      const MASTERBALL_URL = './images/masterball.png';
+      const getPokemonImageUrl = (name) => `./images/${name}.gif`;
+      const DIFFICULTY_CONFIG = {
+        [Difficulty.Normal]: { gridClass: 'grid-cols-3', pairs: 6, cardSizeClass: 'w-32 h-32 md:w-40 md:h-40', ballImage: POKEBALL_URL },
+        [Difficulty.Great]: { gridClass: 'grid-cols-4', pairs: 10, cardSizeClass: 'w-24 h-24 md:w-32 md:h-32', ballImage: GREATBALL_URL },
+        [Difficulty.Ultra]: { gridClass: 'grid-cols-6', pairs: 12, cardSizeClass: 'w-20 h-20 md:w-24 md:h-24', ballImage: ULTRABALL_URL },
+        [Difficulty.Master]: { gridClass: 'grid-cols-6', pairs: 15, cardSizeClass: 'w-20 h-20 md:w-24 md:h-24', ballImage: MASTERBALL_URL },
+      };
+
+      // From components/Card.tsx
+      const Card = ({ cardData, onClick, sizeClass, ballImage }) => {
+        const { isFlipped, isMatched, pokemonName } = cardData;
+        const cardClasses = `relative transition-transform duration-700 transform-style-preserve-3d ${sizeClass} ${
+          (isFlipped || isMatched) ? 'rotate-y-180' : ''
+        }`;
+        const cursorClass = isMatched || isFlipped ? 'cursor-default' : 'cursor-pointer';
+        const frontAndBackBaseClasses = 'absolute w-full h-full backface-hidden rounded-lg shadow-xl flex items-center justify-center';
+
+        return (
+          <div className={`perspective-1000 ${cursorClass}`} onClick={onClick}>
+            <div className={cardClasses}>
+              <div className={`${frontAndBackBaseClasses} bg-gradient-to-br from-red-500 to-red-600 border-4 border-slate-800`}>
+                <div className="w-full h-full bg-white/10 p-2 flex items-center justify-center">
+                  <img src={ballImage} alt="Pokéball" className="w-1/2 h-1/2 object-contain" />
+                </div>
+              </div>
+              <div className={`${frontAndBackBaseClasses} bg-gradient-to-br from-blue-400 to-indigo-500 rotate-y-180 border-4 ${isMatched ? 'border-green-400' : 'border-yellow-400'}`}>
+                <img src={getPokemonImageUrl(pokemonName)} alt={pokemonName} className="w-full h-full object-contain p-2" />
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // From components/DifficultySelector.tsx
+      const DifficultySelector = ({ selectedDifficulty, onDifficultyChange }) => {
+        return (
+          <div>
+            <h2 className="text-2xl font-semibold mb-6 text-center">Choose Difficulty</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Object.values(Difficulty).map((difficulty) => {
+                const config = DIFFICULTY_CONFIG[difficulty];
+                const isSelected = selectedDifficulty === difficulty;
+                return (
+                  <div
+                    key={difficulty}
+                    onClick={() => onDifficultyChange(difficulty)}
+                    className={`flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition-all duration-200 border-4 ${
+                      isSelected
+                        ? 'bg-slate-600 border-yellow-400 scale-105 shadow-lg'
+                        : 'bg-slate-700 border-transparent hover:bg-slate-600 hover:border-slate-500'
+                    }`}
+                    role="button"
+                    aria-pressed={isSelected}
+                    tabIndex={0}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onDifficultyChange(difficulty)}
+                  >
+                    <img src={config.ballImage} alt={`${difficulty} Ball`} className="w-16 h-16 md:w-20 md:h-20 object-contain mb-2" />
+                    <span className="font-bold text-base md:text-lg">{difficulty}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      };
+
+      // From components/GameBoard.tsx
+      const GameBoard = ({ cards, onCardClick, difficulty }) => {
+        const config = DIFFICULTY_CONFIG[difficulty];
+        return (
+          <div className={`grid ${config.gridClass} gap-2 sm:gap-4 justify-center`}>
+            {cards.map((card, index) => (
+              <Card
+                key={card.id}
+                cardData={card}
+                onClick={() => onCardClick(index)}
+                sizeClass={config.cardSizeClass}
+                ballImage={config.ballImage}
+              />
+            ))}
+          </div>
+        );
+      };
+
+      // From App.tsx
+      const App = () => {
+        const [gameState, setGameState] = useState(GameState.Initial);
+        const [difficulty, setDifficulty] = useState(null);
+        const [cards, setCards] = useState([]);
+        const [moves, setMoves] = useState(0);
+        const [flippedCardIndices, setFlippedCardIndices] = useState([]);
+        const [matchedPokemonIds, setMatchedPokemonIds] = useState([]);
+        const [isChecking, setIsChecking] = useState(false);
+
+        const shuffleArray = (array) => array.sort(() => Math.random() - 0.5);
+
+        const prepareCards = useCallback((selectedDifficulty) => {
+          const config = DIFFICULTY_CONFIG[selectedDifficulty];
+          const selectedPokemon = shuffleArray(POKEMON_LIST).slice(0, config.pairs);
+          const gameCards = selectedPokemon.flatMap((name, index) => {
+            const pokemonId = index;
+            return [
+              { id: pokemonId * 2, pokemonId, pokemonName: name, isFlipped: false, isMatched: false },
+              { id: pokemonId * 2 + 1, pokemonId, pokemonName: name, isFlipped: false, isMatched: false },
+            ];
+          });
+          setCards(shuffleArray(gameCards));
+        }, []);
+
+        const startGame = () => {
+          if (!difficulty) return;
+          setMoves(0);
+          setFlippedCardIndices([]);
+          setMatchedPokemonIds([]);
+          setIsChecking(false);
+          prepareCards(difficulty);
+          setGameState(GameState.Playing);
+        };
+        
+        const resetGame = () => {
+          setGameState(GameState.Initial);
+          setDifficulty(null);
+          setCards([]);
+        };
+
+        const handleCardClick = (index) => {
+          if (isChecking || flippedCardIndices.includes(index) || cards[index].isMatched) {
+            return;
+          }
+          const newFlippedIndices = [...flippedCardIndices, index];
+          setFlippedCardIndices(newFlippedIndices);
+          const newCards = [...cards];
+          newCards[index].isFlipped = true;
+          setCards(newCards);
+          if (newFlippedIndices.length === 2) {
+            setIsChecking(true);
+            setMoves(prev => prev + 1);
+          }
+        };
+
+        useEffect(() => {
+          if (flippedCardIndices.length !== 2) return;
+
+          const [firstIndex, secondIndex] = flippedCardIndices;
+          const firstCard = cards[firstIndex];
+          const secondCard = cards[secondIndex];
+
+          if (firstCard.pokemonId === secondCard.pokemonId) {
+            setMatchedPokemonIds(prev => [...prev, firstCard.pokemonId]);
+            const newCards = cards.map(card => 
+              card.pokemonId === firstCard.pokemonId ? { ...card, isMatched: true } : card
+            );
+            setCards(newCards);
+            setFlippedCardIndices([]);
+            setIsChecking(false);
+          } else {
+            setTimeout(() => {
+              const newCards = [...cards];
+              newCards[firstIndex].isFlipped = false;
+              newCards[secondIndex].isFlipped = false;
+              setCards(newCards);
+              setFlippedCardIndices([]);
+              setIsChecking(false);
+            }, 1000);
+          }
+        }, [flippedCardIndices, cards]);
+
+        useEffect(() => {
+          if (difficulty && matchedPokemonIds.length === DIFFICULTY_CONFIG[difficulty].pairs) {
+            setTimeout(() => setGameState(GameState.Won), 500);
+          }
+        }, [matchedPokemonIds, difficulty]);
+
+        return (
+          <div className="min-h-screen flex flex-col items-center justify-center p-4 text-white font-sans">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl md:text-5xl font-bold tracking-wider text-yellow-400" style={{ textShadow: '2px 2px 4px #000000' }}>Pokémon Memory Match</h1>
+              <p className="text-slate-300 mt-2">Test your memory and find all the pairs!</p>
+            </div>
+            {gameState === GameState.Initial && (
+              <div className="bg-slate-800 p-6 md:p-8 rounded-lg shadow-2xl w-full max-w-2xl">
+                  <DifficultySelector selectedDifficulty={difficulty} onDifficultyChange={setDifficulty} />
+                  <button
+                    onClick={startGame}
+                    disabled={!difficulty}
+                    className="mt-8 w-full px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 transition-all duration-300 disabled:bg-slate-600 disabled:cursor-not-allowed transform hover:scale-105 disabled:transform-none"
+                  >
+                    Start Game
+                  </button>
+              </div>
+            )}
+            {gameState === GameState.Playing && difficulty && (
+              <div className="w-full max-w-4xl mx-auto">
+                  <div className="flex justify-between items-center mb-4 bg-slate-800/50 p-3 rounded-lg">
+                      <p className="text-lg">Moves: <span className="font-bold text-yellow-400">{moves}</span></p>
+                      <button onClick={resetGame} className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-colors">
+                        Quit
+                      </button>
+                  </div>
+                  <GameBoard cards={cards} onCardClick={handleCardClick} difficulty={difficulty} />
+              </div>
+            )}
+            {gameState === GameState.Won && difficulty && (
+               <div className="flex flex-col items-center text-center bg-slate-800 p-8 rounded-lg shadow-2xl">
+                  <h2 className="text-3xl font-bold text-green-400 mb-2">You Won!</h2>
+                  <p className="text-slate-300 mb-4">Congratulations! You matched all pairs in {moves} moves.</p>
+                   <div className="flex space-x-4">
+                      <button
+                          onClick={startGame}
+                          className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
+                      >
+                          Play Again
+                      </button>
+                       <button
+                          onClick={resetGame}
+                          className="px-6 py-3 bg-gray-600 text-white font-bold rounded-lg shadow-lg hover:bg-gray-700 transition-all duration-300 transform hover:scale-105"
+                      >
+                          Change Difficulty
+                      </button>
+                   </div>
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      // From index.tsx
+      const rootElement = document.getElementById('root');
+      if (!rootElement) {
+        throw new Error("Could not find root element to mount to");
+      }
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+      
+      // --- End of inlined application code ---
+    </script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

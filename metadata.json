@@ -1,0 +1,6 @@
+{
+  "name": "Pokémon Memory Match",
+  "description": "An interactive Pokémon-themed memory matching game with three difficulty levels. Test your memory by finding all the matching Pokémon pairs.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

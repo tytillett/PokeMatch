@@ -52,7 +52,7 @@ The project uses **Babel Standalone**, a library that transpiles the TypeScript 
 4.  **Win the Game**: You win when you have successfully matched all the pairs of Pokémon. Your total number of moves will be displayed on the victory screen.
 5.  **Restart or Change Difficulty**: After winning, you can choose to 'Play Again' with the same difficulty or 'Change Difficulty' to return to the main menu. You can also 'Quit' mid-game to go back to the start.
 
-## 📁 Project Structure
+## 📁 Project Structure 
 
 ```
 .
